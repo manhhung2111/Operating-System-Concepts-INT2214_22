@@ -1,0 +1,273 @@
+@import "../node_modules/bootstrap/scss/bootstrap";
+
+.App {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  .user-input {
+    // display: flex;
+    width: 900px;
+    .parcel-value-table {
+      .table {
+        .select {
+          .checkBox {
+            $background-color_1: black;
+            display: block;
+            cursor: pointer;
+            width: 10px;
+            height: 10px;
+            border: 2px solid rgba(255, 255, 255, 0);
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0px 0px 0px 1px black;
+            margin: auto;
+            margin-top: 4px;
+            div {
+              width: 60px;
+              height: 60px;
+              background-color: $background-color_1;
+              top: -59px;
+              left: -52px;
+              position: absolute;
+              transform: rotateZ(45deg);
+              z-index: 100;
+            }
+            input[type="checkbox"] {
+              &:checked {
+                + {
+                  div {
+                    left: -20px;
+                    top: -20px;
+                  }
+                }
+              }
+              position: absolute;
+              left: 50px;
+              visibility: hidden;
+            }
+            .transition {
+              transition: 300ms ease;
+            }
+          }
+        }
+        .input {
+          input {
+            width: 60px;
+            outline: none;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            padding-left: 4px;
+          }
+        }
+      }
+      .btn-group {
+        display: flex;
+        gap: 1rem;
+        .add-btn {
+          --color: #436850;
+          $color_1: var(--color);
+          $color_2: rgb(10, 25, 30);
+          $font-family_1: inherit;
+          $background-color_1: transparent;
+          $background-color_2: var(--color);
+          padding: 0.2em 1rem;
+          background-color: $background-color_1;
+          border-radius: 0.3em;
+          position: relative;
+          overflow: hidden;
+          cursor: pointer;
+          transition: 0.3s;
+          font-weight: 400;
+          font-size: 1.1rem;
+          font-weight: 500;
+          border: 2px solid;
+          font-family: $font-family_1;
+          margin-top: 0.5rem;
+          color: $color_1;
+          z-index: 1;
+          &::before {
+            content: "";
+            display: block;
+            width: 50px;
+            height: 50px;
+            transform: translate(-50%, -50%);
+            position: absolute;
+            border-radius: 50%;
+            z-index: -1;
+            background-color: $background-color_2;
+            transition: 1s ease;
+            top: -2em;
+            left: -1em;
+          }
+          &::after {
+            content: "";
+            display: block;
+            width: 50px;
+            height: 50px;
+            transform: translate(-50%, -50%);
+            position: absolute;
+            border-radius: 50%;
+            z-index: -1;
+            background-color: $background-color_2;
+            transition: 1s ease;
+            left: calc(100% + 2em);
+            top: calc(100% + 1em);
+          }
+          &:hover {
+            &::before {
+              height: 410px;
+              width: 410px;
+            }
+            &::after {
+              height: 410px;
+              width: 410px;
+            }
+            color: $color_2;
+            color: whitesmoke;
+          }
+          &:active {
+            filter: brightness(0.8);
+          }
+        }
+        .delete-btn {
+          --color: black;
+          $color_1: var(--color);
+          $color_2: rgb(30, 21, 10);
+          $font-family_1: inherit;
+          $background-color_1: transparent;
+          $background-color_2: #d80032;
+          padding: 0.2em 1rem;
+          background-color: $background-color_1;
+          border-radius: 0.3em;
+          position: relative;
+          overflow: hidden;
+          cursor: pointer;
+          transition: color 0.3s ease-in-out;
+          font-weight: 400;
+          font-size: 1.1rem;
+          font-weight: 500;
+          border: 2px solid;
+          font-family: $font-family_1;
+          margin-top: 0.5rem;
+          color: $color_1;
+          z-index: 1;
+          &::before {
+            content: "";
+            display: block;
+            width: 50px;
+            height: 50px;
+            transform: translate(-50%, -50%);
+            position: absolute;
+            border-radius: 50%;
+            z-index: -1;
+            background-color: $background-color_2;
+            transition: 1s ease;
+            top: -2em;
+            left: -1em;
+          }
+          &::after {
+            content: "";
+            display: block;
+            width: 50px;
+            height: 50px;
+            transform: translate(-50%, -50%);
+            position: absolute;
+            border-radius: 50%;
+            z-index: -1;
+            background-color: $background-color_2;
+            transition: 1s ease;
+            left: calc(100% + 2em);
+            top: calc(100% + 1em);
+          }
+          &:hover {
+            color: whitesmoke;
+            &::before {
+              height: 410px;
+              width: 410px;
+            }
+            &::after {
+              height: 410px;
+              width: 410px;
+            }
+          }
+          &:active {
+            filter: brightness(0.8);
+          }
+          -webkit-animation: fade-in 1s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+          animation: fade-in 1s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+          @-webkit-keyframes fade-in {
+            0% {
+              opacity: 0;
+            }
+            100% {
+              opacity: 1;
+            }
+          }
+          @keyframes fade-in {
+            0% {
+              opacity: 0;
+            }
+            100% {
+              opacity: 1;
+            }
+          }
+        }
+      }
+    }
+  }
+  .scheduler-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    justify-content: center;
+    gap: 50px;
+    width: 90%;
+    .scheduler {
+      text-align: center;
+      display: flex;
+      margin-top: 20px;
+      h3 {
+        margin-bottom: 10px;
+      }
+      h5 {
+        text-align: left;
+      }
+      // align-items: center;
+      flex-direction: column;
+      width: 100%;
+      .gantt-chart {
+        display: flex;
+        .process {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          &:nth-of-type(even) {
+            .processId {
+              border-left: none;
+              border-right: none;
+            }
+          }
+          &:last-child {
+            .processId {
+              border-right: 1px solid black;
+            }
+          }
+          .processId {
+            flex: 1;
+            border: 1px solid black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+          }
+          .time {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+  }
+}
