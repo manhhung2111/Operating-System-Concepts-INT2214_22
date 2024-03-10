@@ -1,133 +1,83 @@
-// C program for the above approach
-
 #include <stdio.h>
-#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
 
-// Initialize a mutex to 1
-int mutex = 1;
+#define BUFFER_SIZE 10
 
-// Number of full slots as 0
-int full = 0;
+// The data type representing a semaphore in "semaphore.h".
+// It's a structure containing the necessary data to manage the semaphore.
+sem_t empty, full, mutex;
 
-// Number of empty slots as size
-// of buffer
-int empty = 10, x = 0;
+int buffer[BUFFER_SIZE];
+int in = 0, out = 0;
 
-// Function to produce an item and
-// add it to the buffer
-void producer()
+void *producer(void *arg)
 {
-    // Decrease mutex value by 1
-    --mutex;
+    int item;
+    for (int i = 0; i < 11; i++)
+    {
+        item = i;
+        sem_wait(&empty);
+        sem_wait(&mutex); 
 
-    // Increase the number of full
-    // slots by 1
-    ++full;
+        // add produced item to buffer
+        buffer[in] = item;
+        printf("Producer produces item %d\n", item);
+        in = (in + 1) % BUFFER_SIZE;
 
-    // Decrease the number of empty
-    // slots by 1
-    --empty;
-
-    // Item produced
-    x++;
-    printf("\nProducer produces"
-           "item %d",
-           x);
-
-    // Increase mutex value by 1
-    ++mutex;
+        sem_post(&mutex);
+        sem_post(&full); 
+        sleep(1); // Simulate some work done by producer
+    }
+    pthread_exit(NULL);
 }
 
-// Function to consume an item and
-// remove it from buffer
-void consumer()
+void *consumer(void *arg)
 {
-    // Decrease mutex value by 1
-    --mutex;
+    int item;
+    for (int i = 0; i < 11; i++)
+    {
+        sem_wait(&full);
+        sem_wait(&mutex);
 
-    // Decrease the number of full
-    // slots by 1
-    --full;
+        // consume item produced by producer
+        item = buffer[out];
+        printf("Consumer consumes item %d\n", item);
+        out = (out + 1) % BUFFER_SIZE;
 
-    // Increase the number of empty
-    // slots by 1
-    ++empty;
-    printf("\nConsumer consumes "
-           "item %d",
-           x);
-    x--;
-
-    // Increase mutex value by 1
-    ++mutex;
+        sem_post(&mutex);
+        sem_post(&empty);
+        sleep(2); // Simulate some work done by consumer
+    }
+    pthread_exit(NULL);
 }
 
-// Driver Code
 int main()
 {
-    int n, i;
-    printf("\n1. Press 1 for Producer"
-           "\n2. Press 2 for Consumer"
-           "\n3. Press 3 for Exit");
+    pthread_t producer_thread, consumer_thread;
+    sem_init(&empty, 0, BUFFER_SIZE);
+    sem_init(&full, 0, 0);
+    sem_init(&mutex, 0, 1);
 
-// Using '#pragma omp parallel for'
-// can give wrong value due to
-// synchronization issues.
+    pthread_create(&producer_thread, NULL, producer, NULL);
+    pthread_create(&consumer_thread, NULL, consumer, NULL);
 
-// 'critical' specifies that code is
-// executed by only one thread at a
-// time i.e., only one thread enters
-// the critical section at a given time
-#pragma omp critical
+    pthread_join(producer_thread, NULL);
+    pthread_join(consumer_thread, NULL);
 
-    for (i = 1; i > 0; i++)
-    {
+    sem_destroy(&empty);
+    sem_destroy(&full);
+    sem_destroy(&mutex);
 
-        printf("\nEnter your choice:");
-        scanf("%d", &n);
-
-        // Switch Cases
-        switch (n)
-        {
-        case 1:
-
-            // If mutex is 1 and empty
-            // is non-zero, then it is
-            // possible to produce
-            if ((mutex == 1) && (empty != 0))
-            {
-                producer();
-            }
-
-            // Otherwise, print buffer
-            // is full
-            else
-            {
-                printf("Buffer is full!");
-            }
-            break;
-
-        case 2:
-
-            // If mutex is 1 and full
-            // is non-zero, then it is
-            // possible to consume
-            if ((mutex == 1) && (full != 0))
-            {
-                consumer();
-            }
-
-            // Otherwise, print Buffer
-            // is empty
-            else
-            {
-                printf("Buffer is empty!");
-            }
-            break;
-
-        // Exit Condition
-        case 3:
-            exit(0);
-            break;
-        }
-    }
+    return 0;
 }
+
+/**
+ * `sem_wait`This function is used to decrement (wait on) the semaphore. 
+ * If the semaphore's value is greater than 0, it decrements the value and continues execution. 
+ * If the value is 0, the function blocks until the semaphore's value becomes greater than 0.
+ * 
+ * `sem_post`: This function is used to increment (signal) the semaphore. 
+ * It increments the semaphore's value and wakes up any threads waiting on the semaphore, allowing them to proceed.
+ */

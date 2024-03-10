@@ -1,75 +1,83 @@
+#include <stdio.h>
 #include <pthread.h>
 #include <semaphore.h>
-#include <stdio.h>
+#include <unistd.h>
 
-/*
-This program provides a possible solution for first readers writers problem using mutex and semaphore.
-I have used 10 readers and 5 producers to demonstrate the solution. You can always play with these values.
-*/
+#define NUM_READERS 5
+#define NUM_WRITERS 2
 
-sem_t wrt;
-pthread_mutex_t mutex;
-int cnt = 1;
-int numreader = 0;
+sem_t mutex, wrt;
+int read_count = 0;
 
-void *writer(void *wno)
-{
-    sem_wait(&wrt);
-    cnt = cnt * 2;
-    printf("Writer %d modified cnt to %d\n", (*((int *)wno)), cnt);
-    sem_post(&wrt);
-}
-void *reader(void *rno)
-{
-    // Reader acquire the lock before modifying numreader
-    pthread_mutex_lock(&mutex);
-    numreader++;
-    if (numreader == 1)
-    {
-        sem_wait(&wrt); // If this id the first reader, then it will block the writer
+void *reader(void *arg) {
+    int reader_id = *((int*) arg);
+    while (1) {
+        sem_wait(&mutex);
+        read_count++;
+        if (read_count == 1) {
+            sem_wait(&wrt);
+        }
+        sem_post(&mutex);
+
+        // Reading...
+        printf("Reader %d is reading...\n", reader_id);
+        sleep(1); // Simulating reading
+
+        sem_wait(&mutex);
+        read_count--;
+        if (read_count == 0) {
+            sem_post(&wrt);
+        }
+        sem_post(&mutex);
     }
-    pthread_mutex_unlock(&mutex);
-    // Reading Section
-    printf("Reader %d: read cnt as %d\n", *((int *)rno), cnt);
-
-    // Reader acquire the lock before modifying numreader
-    pthread_mutex_lock(&mutex);
-    numreader--;
-    if (numreader == 0)
-    {
-        sem_post(&wrt); // If this is the last reader, it will wake up the writer.
-    }
-    pthread_mutex_unlock(&mutex);
+    return NULL;
 }
 
-int main()
-{
+void *writer(void *arg) {
+    int writer_id = *((int*) arg);
+    while (1) {
+        sem_wait(&wrt);
 
-    pthread_t read[10], write[5];
-    pthread_mutex_init(&mutex, NULL);
+        // Writing...
+        printf("Writer %d is writing...\n", writer_id);
+        sleep(1); // Simulating writing
+
+        sem_post(&wrt);
+    }
+    return NULL;
+}
+
+int main() {
+    pthread_t reader_threads[NUM_READERS], writer_threads[NUM_WRITERS];
+    sem_init(&mutex, 0, 1);
     sem_init(&wrt, 0, 1);
 
-    int a[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}; // Just used for numbering the producer and consumer
+    int reader_indices[NUM_READERS], writer_indices[NUM_WRITERS];
 
-    for (int i = 0; i < 10; i++)
-    {
-        pthread_create(&read[i], NULL, (void *)reader, (void *)&a[i]);
-    }
-    for (int i = 0; i < 5; i++)
-    {
-        pthread_create(&write[i], NULL, (void *)writer, (void *)&a[i]);
+    // Creating reader threads
+    for (int i = 0; i < NUM_READERS; i++) {
+        reader_indices[i] = i + 1;
+        pthread_create(&reader_threads[i], NULL, reader, &reader_indices[i]);
     }
 
-    for (int i = 0; i < 10; i++)
-    {
-        pthread_join(read[i], NULL);
-    }
-    for (int i = 0; i < 5; i++)
-    {
-        pthread_join(write[i], NULL);
+    // Creating writer threads
+    for (int i = 0; i < NUM_WRITERS; i++) {
+        writer_indices[i] = i + 1;
+        pthread_create(&writer_threads[i], NULL, writer, &writer_indices[i]);
     }
 
-    pthread_mutex_destroy(&mutex);
+    // Waiting for reader threads to complete (never reached)
+    for (int i = 0; i < NUM_READERS; i++) {
+        pthread_join(reader_threads[i], NULL);
+    }
+
+    // Waiting for writer threads to complete (never reached)
+    for (int i = 0; i < NUM_WRITERS; i++) {
+        pthread_join(writer_threads[i], NULL);
+    }
+
+    // Destroying semaphores
+    sem_destroy(&mutex);
     sem_destroy(&wrt);
 
     return 0;
