@@ -277,8 +277,8 @@ function GanttChart({ data, type, originalData }) {
             <div className="process">
               <div className="processId">{process.processId}</div>
               <div className="time">
-                <p>{index === 0 && process.startTime}</p>
-                <p>{process.endTime}</p>
+                <p>{process.startTime}</p>
+                <p>{process.endTime} {index !== data.length-1 && "|"}</p>
               </div>
             </div>
           );
