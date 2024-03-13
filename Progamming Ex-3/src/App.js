@@ -88,7 +88,6 @@ function App() {
     currentTime++;
     prevProcess.startTime = currentTime - 1;
     while (clone.length > 0) {
-      // for(let i = 0; i < 5; i++)
       // select the shortest remaining burst time process
       let nextProcess = null;
       let minBurstTime = +clone[0].burstTime;
@@ -111,39 +110,40 @@ function App() {
 
       // console.log(prevProcess, nextProcess);
       if (nextProcess === null) {
-        break;
-      }
-      if (prevProcess.processId === nextProcess.processId) {
-        if (parseInt(prevProcess.burstTime) === 0) {
-          const tmp = {
-            processId: prevProcess.processId,
-            startTime: prevProcess.startTime,
-            endTime: currentTime,
-            arrivalTime: prevProcess.arrivalTime,
-          };
-          sjf.push(tmp);
-          clone = clone.filter(
-            (process) => process.processId !== tmp.processId
-          );
+        currentTime++;
+      } else {
+        if (prevProcess.processId === nextProcess.processId) {
+          if (parseInt(prevProcess.burstTime) === 0) {
+            const tmp = {
+              processId: prevProcess.processId,
+              startTime: prevProcess.startTime,
+              endTime: currentTime,
+              arrivalTime: prevProcess.arrivalTime,
+            };
+            sjf.push(tmp);
+            clone = clone.filter(
+              (process) => process.processId !== tmp.processId
+            );
+          } else {
+            nextProcess.burstTime = parseInt(nextProcess.burstTime) - 1;
+            currentTime++;
+          }
         } else {
-          nextProcess.burstTime = parseInt(nextProcess.burstTime) - 1;
+          if (prevProcess.burstTime !== 0) {
+            const tmp = {
+              arrivalTime: prevProcess.arrivalTime,
+              processId: prevProcess.processId,
+              startTime: prevProcess.startTime,
+              endTime: currentTime,
+            };
+            sjf.push(tmp);
+          }
+
+          prevProcess = nextProcess;
+          prevProcess.startTime = currentTime;
+          prevProcess.burstTime = parseInt(prevProcess.burstTime) - 1;
           currentTime++;
         }
-      } else {
-        if (prevProcess.burstTime !== 0) {
-          const tmp = {
-            arrivalTime: prevProcess.arrivalTime,
-            processId: prevProcess.processId,
-            startTime: prevProcess.startTime,
-            endTime: currentTime,
-          };
-          sjf.push(tmp);
-        }
-
-        prevProcess = nextProcess;
-        prevProcess.startTime = currentTime;
-        prevProcess.burstTime = parseInt(prevProcess.burstTime) - 1;
-        currentTime++;
       }
     }
     setSJF((prev) => sjf);
@@ -276,9 +276,9 @@ function App() {
 
   const handleSubmit = () => {
     computeFCFS();
-    computeSJF();
-    computeNonSJF();
-    computeNonPriority();
+    // computeSJF();
+    // computeNonSJF();
+    // computeNonPriority();
   };
   return (
     <div className="App">
@@ -296,13 +296,6 @@ function App() {
       </Button>{" "}
       <div className="scheduler-grid">
         {FCFS.length > 0 && <GanttChart data={FCFS} type={"FCFS"} />}
-        {nonSJF.length > 0 && <GanttChart data={nonSJF} type={"NON-SJF"} />}
-        {SJF.length > 0 && (
-          <GanttChart data={SJF} type={"SJF"} originalData={data} />
-        )}
-        {nonPriority.length > 0 && (
-          <GanttChart data={nonPriority} type={"Non-Priority"} />
-        )}
       </div>
     </div>
   );
