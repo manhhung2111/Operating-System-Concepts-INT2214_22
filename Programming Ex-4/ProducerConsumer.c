@@ -15,7 +15,7 @@ int in = 0, out = 0;
 void *producer(void *arg)
 {
     int item;
-    for (int i = 0; i < 11; i++)
+    for (int i = 0; i < 21; i++)
     {
         item = i;
         sem_wait(&empty);
@@ -28,7 +28,7 @@ void *producer(void *arg)
 
         sem_post(&mutex);
         sem_post(&full); 
-        sleep(1); // Simulate some work done by producer
+        // sleep(1); // Simulate some work done by producer
     }
     pthread_exit(NULL);
 }
@@ -36,7 +36,7 @@ void *producer(void *arg)
 void *consumer(void *arg)
 {
     int item;
-    for (int i = 0; i < 11; i++)
+    for (int i = 0; i < 21; i++)
     {
         sem_wait(&full);
         sem_wait(&mutex);
@@ -48,7 +48,7 @@ void *consumer(void *arg)
 
         sem_post(&mutex);
         sem_post(&empty);
-        sleep(2); // Simulate some work done by consumer
+        // sleep(2); // Simulate some work done by consumer
     }
     pthread_exit(NULL);
 }
@@ -63,8 +63,8 @@ int main()
     pthread_create(&producer_thread, NULL, producer, NULL);
     pthread_create(&consumer_thread, NULL, consumer, NULL);
 
-    pthread_join(producer_thread, NULL);
     pthread_join(consumer_thread, NULL);
+    pthread_join(producer_thread, NULL);
 
     sem_destroy(&empty);
     sem_destroy(&full);

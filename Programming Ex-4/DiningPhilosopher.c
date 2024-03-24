@@ -4,23 +4,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
-/**
- * The structure of philosopher i:
- * while(true) {
- *  wait(chopstick[i])
- *  wait(chopstck[(i + 1) % 5])
- *
- *  Eat for a while
- *
- *  signal(chopstick[i])
- *  signal(chopstick[(i + 1) % 5])
- *
- * }
- * The problem with the above solution:
- * - deadlocks:multiple philosopher acquire forks -> each philosopher has to wait for a fork held by another philosopher
- * -> Solution: allow only 1 philosopher acquire forks at the same time by using mutex semaphore
- */
+#include <time.h>
 
 #define NUM_PHILOSOPHERS 5
 
@@ -28,7 +12,7 @@
 sem_t forks[NUM_PHILOSOPHERS];
 sem_t mutex;
 
-bool isThinking[NUM_PHILOSOPHERS] = {true};
+bool isThinking[NUM_PHILOSOPHERS] = {true, true, true, true, true};
 
 // Define the philosopher thread function
 void *philosopher(void *arg)
@@ -36,6 +20,10 @@ void *philosopher(void *arg)
     int index = *((int *)arg);
     while (1)
     {
+        // printf("Philosopher %d is thinking...\n", index);
+        isThinking[index] = true;
+        sleep(2); // Thinking
+
         sem_wait(&mutex);
 
         int left_fork_index = index;
@@ -44,19 +32,37 @@ void *philosopher(void *arg)
         sem_wait(&forks[left_fork_index]);
         sem_wait(&forks[right_fork_index]);
 
-        // Eating for a while
-        isThinking[index] = false;
-        sleep(rand() % 5 + 1);
         sem_post(&mutex);
+
+        printf("Philosopher %d is eating...\n", index);
+        isThinking[index] = false;
+        sleep(2); // Eating
 
         sem_post(&forks[left_fork_index]);
         sem_post(&forks[right_fork_index]);
-
-        // Thinking for a while
-        isThinking[index] = true;
-        sleep(rand() % 5 + 1);
     }
     return NULL;
+}
+
+// Function to print the state of each philosopher every 5 seconds
+void *printStates(void *arg)
+{
+    while (1)
+    {
+        printf("\n");
+        // Print the state of each philosopher
+        for (int i = 0; i < NUM_PHILOSOPHERS; i++)
+        {
+            if (isThinking[i])
+                printf("Philosopher %d is thinking...\n", i);
+            else
+                printf("Philosopher %d is eating...\n", i);
+        }
+        printf("\n");
+
+        // Sleep for 5 seconds
+        sleep(5);
+    }
 }
 
 int main()
@@ -72,6 +78,7 @@ int main()
 
     // Create a thread for each philosopher
     pthread_t philosopher_threads[NUM_PHILOSOPHERS];
+    pthread_t print_thread;
     int philosopher_indices[NUM_PHILOSOPHERS];
     for (int i = 0; i < NUM_PHILOSOPHERS; i++)
     {
@@ -79,19 +86,10 @@ int main()
         pthread_create(&philosopher_threads[i], NULL, philosopher, &philosopher_indices[i]);
     }
 
-    // Print the state of philosophers every 5 seconds
-    while (1)
-    {
-        sleep(5);
-        printf("\nCurrent state of philosophers:\n");
-        for (int i = 0; i < NUM_PHILOSOPHERS; i++)
-        {
-            const char *state = isThinking[i] ? "thinking" : "eating";
-            printf("Philosopher %d is %s\n", i, state);
-        }
-    }
+    // Create a thread for printing the states
+    pthread_create(&print_thread, NULL, printStates, NULL);
 
-    // Wait for the philosopher threads to complete (never reached)
+    // Wait for the philosopher threads to complete
     for (int i = 0; i < NUM_PHILOSOPHERS; i++)
     {
         pthread_join(philosopher_threads[i], NULL);
